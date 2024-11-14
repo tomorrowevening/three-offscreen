@@ -55,6 +55,10 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
 }
 button:hover {
   border-color: #646cff;
@@ -62,6 +66,14 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+p {
+  color: white;
+  position: absolute;
+  left: 50%;
+  top: 50px;
+  transform: translateX(-50%);
 }
 
 @media (prefers-color-scheme: light) {
