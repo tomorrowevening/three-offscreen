@@ -1,6 +1,15 @@
-import { BoxGeometry, Mesh, MeshNormalMaterial, PerspectiveCamera, Scene, Vector3, WebGLRenderer } from 'three'
+import {
+  BoxGeometry,
+  Mesh,
+  MeshNormalMaterial,
+  PerspectiveCamera,
+  Scene,
+  Vector3,
+  WebGLRenderer,
+} from 'three'
 
 export default class ThreeApp {
+  canvas: HTMLCanvasElement
   renderer: WebGLRenderer
   scene: Scene
   camera: PerspectiveCamera
@@ -9,8 +18,10 @@ export default class ThreeApp {
   private raf = -1
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number, dpr: number) {
+    this.canvas = canvas
+
     this.renderer = new WebGLRenderer({ canvas })
-    this.renderer.setSize(width, height, false)
+    this.renderer.setSize(width, height, !(canvas instanceof OffscreenCanvas))
     this.renderer.setPixelRatio(dpr)
 
     this.camera = new PerspectiveCamera(60, width / height, 0.1, 1000)
@@ -19,7 +30,7 @@ export default class ThreeApp {
 
     this.scene = new Scene()
 
-    this.cube = new Mesh(new BoxGeometry(), new MeshNormalMaterial());
+    this.cube = new Mesh(new BoxGeometry(), new MeshNormalMaterial())
     this.scene.add(this.cube);
   }
 
@@ -55,6 +66,6 @@ export default class ThreeApp {
   resize(width: number, height: number) {
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
-    this.renderer.setSize(width, height, false)
+    this.renderer.setSize(width, height, !(this.canvas instanceof OffscreenCanvas))
   }
 }

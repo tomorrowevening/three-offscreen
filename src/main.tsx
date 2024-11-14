@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import Wrapper from './Wrapper'
 
-export const IS_DEV = import.meta.env.MODE === 'development';
+export const IS_DEV = import.meta.env.MODE === 'development'
 
 createRoot(document.getElementById('root')!).render(
   <>

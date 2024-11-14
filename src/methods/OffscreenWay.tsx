@@ -1,13 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react'
+import { MethodProps } from '../types'
 
-type OffscreenWayProps = {
-  canvas: HTMLCanvasElement
-}
-
-export default function OffscreenWay(props: OffscreenWayProps) {
+export default function OffscreenWay(props: MethodProps) {
   const workerRef = useRef<Worker | null>(null)
 
   useEffect(() => {
+    console.log('Offscreen Canvas')
     if (!workerRef.current) {
       workerRef.current = new Worker(new URL('../OffscreenWorker.ts', import.meta.url), {
         type: 'module',
@@ -19,8 +17,8 @@ export default function OffscreenWay(props: OffscreenWayProps) {
       {
         type: 'init',
         canvas: offscreenCanvas,
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: innerWidth,
+        height: innerHeight,
         dpr: devicePixelRatio,
       },
       [offscreenCanvas]
@@ -29,8 +27,8 @@ export default function OffscreenWay(props: OffscreenWayProps) {
     const resize = () => {
       workerRef.current?.postMessage({
         type: 'resize',
-        width: window.innerWidth,
-        height: window.innerHeight
+        width: innerWidth,
+        height: innerHeight
       })
     };
     window.addEventListener('resize', resize)

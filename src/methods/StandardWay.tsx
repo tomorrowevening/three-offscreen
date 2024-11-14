@@ -1,12 +1,10 @@
 import { useEffect } from 'react'
 import ThreeApp from '../ThreeApp'
+import { MethodProps } from '../types'
 
-type StandardWayProps = {
-  canvas: HTMLCanvasElement
-}
-
-export default function StandardWay(props: StandardWayProps) {
+export default function StandardWay(props: MethodProps) {
   useEffect(() => {
+    console.log('Regular Canvas')
     const app = new ThreeApp(props.canvas, innerWidth, innerHeight, devicePixelRatio)
     app.play()
     return () => {

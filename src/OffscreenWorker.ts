@@ -7,7 +7,7 @@ self.onmessage = (event) => {
   const height = event.data.height
 
   if (event.data.type === 'init') {
-    const canvas = event.data.canvas as HTMLCanvasElement;
+    const canvas = event.data.canvas as HTMLCanvasElement
     if (!(canvas instanceof OffscreenCanvas)) {
       console.log(`Doesn't support offscreen`)
       return
