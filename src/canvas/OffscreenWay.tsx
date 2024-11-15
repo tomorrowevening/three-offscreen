@@ -1,19 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { MethodProps } from '../types'
+import Workers from '../webworker/workers'
 
 export default function OffscreenWay(props: MethodProps) {
-  const workerRef = useRef<Worker | null>(null)
-
   useEffect(() => {
     console.log('Offscreen Canvas')
-    if (!workerRef.current) {
-      workerRef.current = new Worker(new URL('../OffscreenWorker.ts', import.meta.url), {
-        type: 'module',
-      })
-    }
-
     const offscreenCanvas = props.canvas.transferControlToOffscreen()
-    workerRef.current.postMessage(
+    Workers.canvas?.postMessage(
       {
         type: 'init',
         canvas: offscreenCanvas,
@@ -25,7 +18,7 @@ export default function OffscreenWay(props: MethodProps) {
     )
 
     const resize = () => {
-      workerRef.current?.postMessage({
+      Workers.canvas?.postMessage({
         type: 'resize',
         width: innerWidth,
         height: innerHeight
@@ -35,8 +28,6 @@ export default function OffscreenWay(props: MethodProps) {
 
     return () => {
       window.removeEventListener('resize', resize)
-      workerRef.current?.terminate()
-      workerRef.current = null
     };
   }, [props])
 
