@@ -11,10 +11,12 @@ import {
   PlaneGeometry,
   Scene,
   Texture,
+  Vector2,
   WebGLRenderer,
 } from 'three'
 import { Assets } from '../types'
 import { createGLTF } from './threeUtils'
+import { degToRad } from 'three/src/math/MathUtils.js'
 
 export default class ThreeApp {
   canvas: HTMLCanvasElement
@@ -26,6 +28,7 @@ export default class ThreeApp {
   private clock = new Clock()
   private raf = -1
   private mixer?: AnimationMixer
+  private isMouseDown = false
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number, dpr: number) {
     this.canvas = canvas
@@ -35,7 +38,7 @@ export default class ThreeApp {
     this.renderer.setPixelRatio(dpr)
 
     this.camera = new PerspectiveCamera(60, width / height, 0.1, 1000)
-    this.camera.position.z = 5
+    this.camera.position.z = 7
 
     this.scene = new Scene()
 
@@ -90,7 +93,6 @@ export default class ThreeApp {
   update() {
     const delta = this.clock.getDelta()
     this.cube.rotation.x += 0.01
-    this.cube.rotation.y += 0.01
     this.mixer?.update(delta)
   }
 
@@ -108,5 +110,26 @@ export default class ThreeApp {
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(width, height, !(this.canvas instanceof OffscreenCanvas))
+  }
+
+  // Events
+
+  private mouseDownPt = new Vector2()
+
+  mouseDown(x: number, y: number) {
+    this.isMouseDown = true
+    this.mouseDownPt.set(x, y)
+  }
+
+  mouseMove(x: number, _y: number) {
+    if (this.isMouseDown) {
+      const scale = 0.01
+      const deltaX = this.mouseDownPt.x - x
+      this.scene.rotateY(degToRad(deltaX * scale))
+    }
+  }
+
+  mouseUp(_x: number, _y: number) {
+    this.isMouseDown = false
   }
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Assets, File } from '../types'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
@@ -34,7 +33,6 @@ async function loadGLTF(item: File) {
           animations: value.animations.map(animation => animation.toJSON(animation)),
           cameras: value.cameras.map(camera => camera.toJSON()),
         }
-        // @ts-ignore
         assets.gltf[item.name] = gltfLite
         resolve(gltfLite)
       },
@@ -52,7 +50,6 @@ function loadStart() {
     switch (item.type) {
       case 'texture':
         loadImage(item.file).then((value: ImageBitmap) => {
-          // @ts-ignore
           assets.textures[item.name] = value
           onLoad()
         })

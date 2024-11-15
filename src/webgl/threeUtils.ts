@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { AnimationClip, AnimationMixer, Object3D, ObjectLoader } from 'three';
 import { GLTFLite } from '../types'
 

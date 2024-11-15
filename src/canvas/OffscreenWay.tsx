@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { MethodProps } from '../types'
 import Workers from '../webworker/workers'
+import EventHandler from '../webgl/EventHandler'
 
 export default function OffscreenWay(props: MethodProps) {
   useEffect(() => {
@@ -16,20 +17,14 @@ export default function OffscreenWay(props: MethodProps) {
       },
       [offscreenCanvas]
     )
-
-    const resize = () => {
-      Workers.canvas?.postMessage({
-        type: 'resize',
-        width: innerWidth,
-        height: innerHeight
-      })
-    };
-    window.addEventListener('resize', resize)
-
-    return () => {
-      window.removeEventListener('resize', resize)
-    };
   }, [props])
 
-  return null
+  return (
+    <EventHandler
+      onResize={(width: number, height: number) => Workers.canvas?.postMessage({ type: 'resize', width, height })}
+      onMouseDown={(x: number, y: number) => Workers.canvas?.postMessage({ type: 'mouseDown', x, y })}
+      onMouseMove={(x: number, y: number) => Workers.canvas?.postMessage({ type: 'mouseMove', x, y })}
+      onMouseUp={(x: number, y: number) => Workers.canvas?.postMessage({ type: 'mouseUp', x, y })}
+    />
+  )
 }
