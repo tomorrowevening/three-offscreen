@@ -4,6 +4,8 @@ import {
   BoxGeometry,
   Clock,
   DirectionalLight,
+  DoubleSide,
+  Group,
   Mesh,
   MeshBasicMaterial,
   MeshPhongMaterial,
@@ -14,21 +16,23 @@ import {
   Vector2,
   WebGLRenderer,
 } from 'three'
+import { degToRad, lerp } from 'three/src/math/MathUtils.js'
 import { Assets } from '../types'
 import { createGLTF } from './threeUtils'
-import { degToRad } from 'three/src/math/MathUtils.js'
 
 export default class ThreeApp {
   canvas: HTMLCanvasElement
   renderer: WebGLRenderer
   scene: Scene
   camera: PerspectiveCamera
+  container: Group
   cube: Mesh
 
   private clock = new Clock()
   private raf = -1
   private mixer?: AnimationMixer
   private isMouseDown = false
+  private targetRotation = 0
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number, dpr: number) {
     this.canvas = canvas
@@ -38,18 +42,21 @@ export default class ThreeApp {
     this.renderer.setPixelRatio(dpr)
 
     this.camera = new PerspectiveCamera(60, width / height, 0.1, 1000)
-    this.camera.position.z = 7
+    this.camera.position.z = 12
 
     this.scene = new Scene()
 
+    this.container = new Group()
+    this.scene.add(this.container)
+
     this.cube = new Mesh(new BoxGeometry(), new MeshPhongMaterial())
-    this.scene.add(this.cube);
+    this.container.add(this.cube);
 
     const light = new DirectionalLight()
-    light.position.set(1, 5, 5)
+    light.position.set(3, 5, 5)
     this.scene.add(light)
 
-    const ambient = new AmbientLight(0xffffff, 0.4)
+    const ambient = new AmbientLight(0xffffff, 0.1)
     this.scene.add(ambient)
 
     this.clock.start()
@@ -65,19 +72,19 @@ export default class ThreeApp {
     const texture = new Texture(assets.textures.uvGrid)
     texture.needsUpdate = true
 
-    const material = new MeshBasicMaterial({ map: texture })
+    const material = new MeshBasicMaterial({ map: texture, side: DoubleSide })
     const mesh = new Mesh(new PlaneGeometry(), material)
     mesh.position.z = -5
     mesh.scale.setScalar(6)
     mesh.scale.y *= -1
-    this.scene.add(mesh)
+    this.container.add(mesh)
 
     // GLTF Examples
     const gltf = createGLTF(assets.gltf.Horse)
     const model = gltf.model
     model.position.set(1.5, -1, 0)
     model.scale.setScalar(0.01)
-    this.scene.add(model)
+    this.container.add(model)
     this.mixer = gltf.mixer
   }
 
@@ -94,6 +101,7 @@ export default class ThreeApp {
     const delta = this.clock.getDelta()
     this.cube.rotation.x += 0.01
     this.mixer?.update(delta)
+    this.container.rotation.y = lerp(this.container.rotation.y, this.targetRotation, 0.1)
   }
 
   draw() {
@@ -125,7 +133,7 @@ export default class ThreeApp {
     if (this.isMouseDown) {
       const scale = 0.01
       const deltaX = this.mouseDownPt.x - x
-      this.scene.rotateY(degToRad(deltaX * scale))
+      this.targetRotation += degToRad(deltaX * scale);
     }
   }
 
