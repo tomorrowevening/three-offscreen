@@ -11,8 +11,6 @@ function createApp(data: any) {
 
   app = new ThreeApp(canvas, data.width, data.height, data.dpr)
   app.play()
-
-  self.postMessage({ type: 'initComplete' })
 }
 
 self.onmessage = (event) => {

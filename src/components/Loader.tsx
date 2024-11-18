@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import Workers from '../webworker/workers';
 import { File } from '../types';
+import { dispatcher, Events } from '../global/constants';
 
 export default function Loader() {
   const pRef = useRef<HTMLParagraphElement>(null)
@@ -20,25 +20,15 @@ export default function Loader() {
       },
     ]
 
-    const onCanvasMessage = (event: any) => {
-      if (event.data.type === 'initComplete') {
-        Workers.canvas?.removeEventListener('message', onCanvasMessage)
-        Workers.loader?.postMessage({ type: 'loadStart', data: assetList })
-      }
+    function onLoad() {
+      dispatcher.removeEventListener(Events.LoadComplete, onLoad)
+      setLoaded(true)
     }
 
-    const onLoadMessage = (event: any) => {
-      if (event.data.type === 'loadComplete') {
-        Workers.canvas?.postMessage({ type: 'loadComplete', data: event.data.data })
-        setLoaded(true)
-      }
-    }
-
-    Workers.canvas?.addEventListener('message', onCanvasMessage)
-    Workers.loader?.addEventListener('message', onLoadMessage)
+    dispatcher.addEventListener(Events.LoadComplete, onLoad)
+    dispatcher.dispatchEvent({ type: Events.LoadStart, value: assetList })
     return () => {
-      Workers.canvas?.removeEventListener('message', onCanvasMessage)
-      Workers.loader?.removeEventListener('message', onLoadMessage)
+      dispatcher.removeEventListener(Events.LoadComplete, onLoad)
     }
   }, [])
 

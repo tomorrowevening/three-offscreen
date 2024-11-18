@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import ThreeApp from '../webgl/ThreeApp'
 import { MethodProps } from '../types'
 import EventHandler from '../webgl/EventHandler'
+import { dispatcher, Events } from '../global/constants'
 
 export default function StandardWay(props: MethodProps) {
   // let app: ThreeApp
@@ -16,7 +17,14 @@ export default function StandardWay(props: MethodProps) {
     newApp.resize(innerWidth, innerHeight)
     setApp(newApp)
 
+    function onLoad(event: any) {
+      dispatcher.removeEventListener(Events.LoadComplete, onLoad)
+      newApp.onLoad(event.value)
+    }
+    dispatcher.addEventListener(Events.LoadComplete, onLoad)
+
     return () => {
+      dispatcher.removeEventListener(Events.LoadComplete, onLoad)
       newApp.dispose()
     }
   }, [props])
