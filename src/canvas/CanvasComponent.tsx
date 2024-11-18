@@ -1,6 +1,7 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import OffscreenWay from './OffscreenWay'
 import StandardWay from './StandardWay'
+import Stats from 'stats-gl'
 
 let interval: number | null = null
 
@@ -36,6 +37,23 @@ export default function CanvasComponent(props: CanvasComponentProps) {
       resultRef.current!.innerHTML = ''
     }
   }
+
+  useEffect(() => {
+    const stats = new Stats({})
+    document.body.appendChild(stats.dom)
+
+    let rafID = -1
+    const onUpdate = () => {
+      stats.update()
+      rafID = requestAnimationFrame(onUpdate)
+    }
+    onUpdate()
+
+    return () => {
+      cancelAnimationFrame(rafID)
+      rafID = -1
+    }
+  }, [])
 
   return (
     <>
