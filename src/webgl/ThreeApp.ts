@@ -99,7 +99,7 @@ export default class ThreeApp {
 
   update() {
     const delta = this.clock.getDelta()
-    this.cube.rotation.x += 0.01
+    this.cube.rotation.x += delta
     this.mixer?.update(delta)
     this.container.rotation.y = lerp(this.container.rotation.y, this.targetRotation, 0.1)
   }
