@@ -5,7 +5,6 @@ import EventHandler from '../webgl/EventHandler'
 import { dispatcher, Events } from '../global/constants'
 
 export default function StandardWay(props: MethodProps) {
-  // let app: ThreeApp
   const [app, setApp] = useState<ThreeApp | null>(null)
 
   useEffect(() => {
@@ -38,6 +37,7 @@ export default function StandardWay(props: MethodProps) {
             onMouseDown={(x: number, y: number) => app.mouseDown(x, y)}
             onMouseMove={(x: number, y: number) => app.mouseMove(x, y)}
             onMouseUp={(x: number, y: number) => app.mouseUp(x, y)}
+            onWheel={(position: number, delta: number) => app.wheel(position, delta)}
           />
         </>
       )}

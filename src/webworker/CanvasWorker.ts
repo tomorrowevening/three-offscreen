@@ -36,5 +36,8 @@ self.onmessage = (event) => {
     case 'mouseUp':
       app.mouseUp(event.data.x, event.data.y)
       break
+    case 'wheel':
+      app.wheel(event.data.position, event.data.delta)
+      break;
   }
 }

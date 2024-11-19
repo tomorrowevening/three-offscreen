@@ -5,6 +5,7 @@ type EventHandlerProps = {
   onMouseDown: (x: number, y: number) => void
   onMouseMove: (x: number, y: number) => void
   onMouseUp: (x: number, y: number) => void
+  onWheel: (position: number, delta: number) => void
 }
 
 export default function EventHandler(props: EventHandlerProps) {
@@ -22,15 +23,25 @@ export default function EventHandler(props: EventHandlerProps) {
       props.onMouseUp(evt.clientX, evt.clientY)
     }
 
+    // Wheel
+    let scrollPosition = 0
+    const onWheel = (evt: WheelEvent) => {
+      const delta = evt.deltaY / 100
+      scrollPosition += delta
+      props.onWheel(scrollPosition, delta)
+    }
+
     window.addEventListener('resize', onResize)
     window.addEventListener('mousedown', onMouseDown)
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
+    window.addEventListener('wheel', onWheel)
     return  () => {
       window.removeEventListener('resize', onResize)
       window.removeEventListener('mousedown', onMouseDown)
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mouseup', onMouseUp)
+      window.removeEventListener('wheel', onWheel)
     }
   }, [props])
 

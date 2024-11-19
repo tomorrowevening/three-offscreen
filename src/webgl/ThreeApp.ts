@@ -16,7 +16,7 @@ import {
   Vector2,
   WebGLRenderer,
 } from 'three'
-import { degToRad, lerp } from 'three/src/math/MathUtils.js'
+import { clamp, damp, degToRad } from 'three/src/math/MathUtils.js'
 import { Assets } from '../types'
 import { createGLTF } from './threeUtils'
 
@@ -33,6 +33,7 @@ export default class ThreeApp {
   private mixer?: AnimationMixer
   private isMouseDown = false
   private targetRotation = 0
+  private targetZ = 0
 
   constructor(canvas: HTMLCanvasElement, width: number, height: number, dpr: number) {
     this.canvas = canvas
@@ -43,6 +44,7 @@ export default class ThreeApp {
 
     this.camera = new PerspectiveCamera(60, width / height, 0.1, 1000)
     this.camera.position.z = 12
+    this.targetZ = this.camera.position.z
 
     this.scene = new Scene()
 
@@ -99,9 +101,13 @@ export default class ThreeApp {
 
   update() {
     const delta = this.clock.getDelta()
-    this.cube.rotation.x += delta
     this.mixer?.update(delta)
-    this.container.rotation.y = lerp(this.container.rotation.y, this.targetRotation, 0.1)
+
+    this.cube.rotation.x += delta
+
+    const deltaX = delta * 100
+    this.camera.position.z = damp(this.camera.position.z, this.targetZ, 0.1, deltaX)
+    this.container.rotation.y = damp(this.container.rotation.y, this.targetRotation, 0.1, deltaX)
   }
 
   draw() {
@@ -139,5 +145,9 @@ export default class ThreeApp {
 
   mouseUp(_x: number, _y: number) {
     this.isMouseDown = false
+  }
+
+  wheel(_position: number, delta: number) {
+    this.targetZ = clamp(this.targetZ + delta, 3, 15)
   }
 }
