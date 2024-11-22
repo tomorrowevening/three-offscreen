@@ -1,58 +1,56 @@
 import {
   AmbientLight,
   AnimationMixer,
+  BackSide,
   BoxGeometry,
   Clock,
   DirectionalLight,
   DoubleSide,
-  Group,
   Mesh,
   MeshBasicMaterial,
+  MeshNormalMaterial,
   MeshPhongMaterial,
   PerspectiveCamera,
   PlaneGeometry,
   Scene,
+  SphereGeometry,
   Texture,
-  Vector2,
   WebGLRenderer,
 } from 'three'
-import { clamp, damp, degToRad } from 'three/src/math/MathUtils.js'
 import { Assets } from '../types'
 import { createGLTF } from './threeUtils'
+import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
 export default class ThreeApp {
   canvas: HTMLCanvasElement
   renderer: WebGLRenderer
   scene: Scene
   camera: PerspectiveCamera
-  container: Group
   cube: Mesh
 
   private clock = new Clock()
   private raf = -1
   private mixer?: AnimationMixer
-  private isMouseDown = false
-  private targetRotation = 0
-  private targetZ = 0
+  private controls?: OrbitControls
+  private inputElement: any
 
-  constructor(canvas: HTMLCanvasElement, width: number, height: number, dpr: number) {
+  constructor(canvas: HTMLCanvasElement, inputElement: any, width: number, height: number, dpr: number) {
     this.canvas = canvas
+    this.inputElement = inputElement
 
     this.renderer = new WebGLRenderer({ canvas })
-    this.renderer.setSize(width, height, !(canvas instanceof OffscreenCanvas))
     this.renderer.setPixelRatio(dpr)
 
-    this.camera = new PerspectiveCamera(60, width / height, 0.1, 1000)
+    this.camera = new PerspectiveCamera(60, width / height, 0.1, 100)
     this.camera.position.z = 12
-    this.targetZ = this.camera.position.z
 
     this.scene = new Scene()
 
-    this.container = new Group()
-    this.scene.add(this.container)
-
     this.cube = new Mesh(new BoxGeometry(), new MeshPhongMaterial())
-    this.container.add(this.cube);
+    this.scene.add(this.cube);
+
+    const sky = new Mesh(new SphereGeometry(20), new MeshNormalMaterial({ side: BackSide }))
+    this.scene.add(sky)
 
     const light = new DirectionalLight()
     light.position.set(3, 5, 5)
@@ -62,9 +60,22 @@ export default class ThreeApp {
     this.scene.add(ambient)
 
     this.clock.start()
+
+    inputElement.addEventListener('resize', this.onResize)
+    this.resize(width, height)
+
+    // @ts-ignore
+    this.controls = new OrbitControls(this.camera, inputElement)
+    this.controls.target.set( 0, 0, 0 );
+    this.controls.enableDamping = true
+    this.controls.maxDistance = 20
+    this.controls.minDistance = 4
+    this.controls.update()
   }
 
   dispose() {
+    this.controls?.dispose()
+    this.inputElement.removeEventListener('resize', this.onResize)
     this.pause()
     this.renderer.dispose()
   }
@@ -79,14 +90,14 @@ export default class ThreeApp {
     mesh.position.z = -5
     mesh.scale.setScalar(6)
     mesh.scale.y *= -1
-    this.container.add(mesh)
+    this.scene.add(mesh)
 
     // GLTF Examples
     const gltf = createGLTF(assets.gltf.Horse)
     const model = gltf.model
     model.position.set(1.5, -1, 0)
     model.scale.setScalar(0.01)
-    this.container.add(model)
+    this.scene.add(model)
     this.mixer = gltf.mixer
   }
 
@@ -105,9 +116,13 @@ export default class ThreeApp {
 
     this.cube.rotation.x += delta
 
-    const deltaX = delta * 100
-    this.camera.position.z = damp(this.camera.position.z, this.targetZ, 0.1, deltaX)
-    this.container.rotation.y = damp(this.container.rotation.y, this.targetRotation, 0.1, deltaX)
+    // const deltaX = delta * 100
+    // this.camera.position.z = damp(this.camera.position.z, this.targetZ, 0.1, deltaX)
+    // this.container.rotation.y = damp(this.container.rotation.y, this.targetRotation, 0.1, deltaX)
+
+    this.controls?.update(delta)
+    // @ts-ignore
+    // console.log(this.controls.state, this.inputElement.clientHeight, this.camera.position)
   }
 
   draw() {
@@ -121,33 +136,25 @@ export default class ThreeApp {
   }
 
   resize(width: number, height: number) {
+    if (this.canvas instanceof OffscreenCanvas) {
+      const offscreen = this.canvas as OffscreenCanvas
+      this.inputElement.clientWidth = width
+      this.inputElement.clientHeight = height
+      // @ts-ignore
+      offscreen.clientWidth = width
+      // @ts-ignore
+      offscreen.clientHeight = height
+    }
+
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
     this.renderer.setSize(width, height, !(this.canvas instanceof OffscreenCanvas))
   }
 
-  // Events
+  // Handlers
 
-  private mouseDownPt = new Vector2()
-
-  mouseDown(x: number, y: number) {
-    this.isMouseDown = true
-    this.mouseDownPt.set(x, y)
-  }
-
-  mouseMove(x: number, _y: number) {
-    if (this.isMouseDown) {
-      const scale = 0.01
-      const deltaX = this.mouseDownPt.x - x
-      this.targetRotation += degToRad(deltaX * scale);
-    }
-  }
-
-  mouseUp(_x: number, _y: number) {
-    this.isMouseDown = false
-  }
-
-  wheel(_position: number, delta: number) {
-    this.targetZ = clamp(this.targetZ + delta, 3, 15)
+  private onResize = (evt: any) => {
+    const { width, height } = evt
+    this.resize(width, height)
   }
 }
