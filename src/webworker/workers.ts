@@ -19,6 +19,8 @@ export default class Workers {
         const assets = event.data.data
         dispatcher.dispatchEvent({ type: Events.LoadComplete, value: assets })
         this.canvas?.postMessage({ type: 'loadComplete', data: assets })
+        this.loader?.terminate()
+        this.loader = null
       }
     }
 
