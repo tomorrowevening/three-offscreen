@@ -130,20 +130,18 @@ function createApp(data: any) {
   proxy.ownerDocument = proxy; // HACK!
   (self as any).document = {}; // HACK!
 
-  // @ts-ignore
-  app = new ThreeApp(canvas, proxy, data.width, data.height, data.dpr)
+  app = new ThreeApp(canvas, proxy, data)
   app.play()
 }
 
 self.onmessage = (event) => {
   const type = event.data.type
-  const data = event.data.data
   switch (type) {
     case 'init':
       createApp(event.data)
       break
     case 'loadComplete':
-      app.onLoad(data)
+      app.onLoad(event.data.data)
       break
     case 'event':
       proxyManager.handleEvent(event.data)

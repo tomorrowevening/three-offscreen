@@ -1,13 +1,14 @@
-import { dispatcher, Events } from "../global/constants"
+import { dispatcher, Events } from '../global/constants'
+import Settings from '../global/settings'
 
 export default class Workers {
   static canvas: Worker | null
   static loader: Worker | null
 
-  static init(offscreenSupported: boolean) {
+  static init() {
     // Canvas
 
-    if (offscreenSupported) {
+    if (Settings.supportOffScreenCanvas) {
       this.canvas = new Worker(new URL('./CanvasWorker.ts', import.meta.url), { type: 'module' })
     }
 

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { MethodProps } from '../types'
 import Workers from '../webworker/workers'
+import Settings from '../global/settings';
 
 // Transfer Events
 
@@ -173,17 +174,15 @@ export default function OffscreenWay(props: MethodProps) {
 
       // App
       const offscreenCanvas = props.canvas.transferControlToOffscreen()
-      Workers.canvas.postMessage(
-        {
+      const message = {
+        ...{
           type: 'init',
           canvas: offscreenCanvas,
           canvasId: proxy.id,
-          width: innerWidth,
-          height: innerHeight,
-          dpr: devicePixelRatio,
         },
-        [offscreenCanvas]
-      )
+        ...Settings,
+      }
+      Workers.canvas.postMessage(message, [offscreenCanvas])
     }
   }, [props])
 

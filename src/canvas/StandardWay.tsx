@@ -2,15 +2,15 @@ import { useEffect } from 'react'
 import ThreeApp from '../webgl/ThreeApp'
 import { MethodProps } from '../types'
 import { dispatcher, Events } from '../global/constants'
+import Settings from '../global/settings'
 
 export default function StandardWay(props: MethodProps) {
   useEffect(() => {
     console.log('Regular Canvas')
 
     // App
-    const newApp = new ThreeApp(props.canvas, props.canvas, innerWidth, innerHeight, devicePixelRatio)
+    const newApp = new ThreeApp(props.canvas, props.canvas, Settings)
     newApp.play()
-    newApp.resize(innerWidth, innerHeight)
 
     function onLoad(event: any) {
       dispatcher.removeEventListener(Events.LoadComplete, onLoad)

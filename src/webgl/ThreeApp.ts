@@ -17,7 +17,7 @@ import {
   Texture,
   WebGLRenderer,
 } from 'three'
-import { Assets } from '../types'
+import { AppSettings, Assets } from '../types'
 import { createGLTF } from './threeUtils'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 
@@ -29,19 +29,20 @@ export default class ThreeApp {
   cube: Mesh
 
   private clock = new Clock()
-  private raf = -1
   private mixer?: AnimationMixer
   private controls?: OrbitControls
   private inputElement: any
+  private raf = -1
 
-  constructor(canvas: HTMLCanvasElement, inputElement: any, width: number, height: number, dpr: number) {
+  constructor(canvas: HTMLCanvasElement, inputElement: any, settings: AppSettings) {
+    console.log(settings)
     this.canvas = canvas
     this.inputElement = inputElement
 
     this.renderer = new WebGLRenderer({ canvas })
-    this.renderer.setPixelRatio(dpr)
+    this.renderer.setPixelRatio(settings.dpr)
 
-    this.camera = new PerspectiveCamera(60, width / height, 0.1, 100)
+    this.camera = new PerspectiveCamera(60, settings.width / settings.height, 0.1, 100)
     this.camera.position.z = 12
 
     this.scene = new Scene()
@@ -62,7 +63,7 @@ export default class ThreeApp {
     this.clock.start()
 
     inputElement.addEventListener('resize', this.onResize)
-    this.resize(width, height)
+    this.resize(settings.width, settings.height)
 
     // @ts-ignore
     this.controls = new OrbitControls(this.camera, inputElement)

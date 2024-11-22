@@ -22,3 +22,19 @@ export type GLTFLite = {
   cameras: []
   scene: any
 }
+
+export enum QualityType {
+  'High',
+  'Medium',
+  'Low',
+}
+
+export type AppSettings = {
+  dpr: number
+  fps: number
+  width: number
+  height: number
+  mobile: boolean
+  supportOffScreenCanvas: boolean
+  quality: QualityType
+}

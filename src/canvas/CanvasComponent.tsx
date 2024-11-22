@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
+import Stats from 'stats-gl'
 import OffscreenWay from './OffscreenWay'
 import StandardWay from './StandardWay'
-import Stats from 'stats-gl'
+import Settings from '../global/settings'
 
 let interval: number | null = null
 
 type CanvasComponentProps = {
   canvas: HTMLCanvasElement
-  offscreenSupported: boolean
 }
 
 export default function CanvasComponent(props: CanvasComponentProps) {
@@ -59,7 +59,7 @@ export default function CanvasComponent(props: CanvasComponentProps) {
     <>
       <p ref={resultRef}>0</p>
       <button ref={buttonRef} onClick={clickButton}>Jank</button>
-      {props.offscreenSupported ? (
+      {Settings.supportOffScreenCanvas ? (
         <OffscreenWay canvas={props.canvas} />
       ) : (
         <StandardWay canvas={props.canvas} />
