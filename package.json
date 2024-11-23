@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "detect-gpu": "^5.0.57",
+    "postprocessing": "^6.36.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stats-gl": "^3.6.0",

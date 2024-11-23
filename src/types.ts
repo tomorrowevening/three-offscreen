@@ -1,10 +1,10 @@
-import { AnimationClip } from 'three'
+import { AnimationClip, Object3DJSON } from 'three'
 
 export type MethodProps = {
   canvas: HTMLCanvasElement
 }
 
-export type FileType = 'audio' | 'image' | 'json' | 'cubeTexture' | 'texture' | 'gltf' | 'draco' | 'fbx' | 'mp4'
+export type FileType = 'audio' | 'image' | 'json' | 'gltf' | 'fbx' | 'video'
 
 export type File = {
   name: string
@@ -13,14 +13,16 @@ export type File = {
 }
 
 export type Assets = {
-  gltf: any
-  textures: any
+  audio: any
+  images: any
+  models: any
+  video: any
 }
 
-export type GLTFLite = {
+export type ModelLite = {
   animations: AnimationClip[]
-  cameras: []
-  scene: any
+  cameras?: Object3DJSON[]
+  scene: Object3DJSON
 }
 
 export enum QualityType {

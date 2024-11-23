@@ -1,25 +1,26 @@
 import {
   AmbientLight,
   AnimationMixer,
-  BackSide,
   BoxGeometry,
   Clock,
+  CubeReflectionMapping,
+  CubeTexture,
   DirectionalLight,
   DoubleSide,
+  HalfFloatType,
   Mesh,
   MeshBasicMaterial,
-  MeshNormalMaterial,
-  MeshPhongMaterial,
+  MeshStandardMaterial,
   PerspectiveCamera,
   PlaneGeometry,
   Scene,
-  SphereGeometry,
   Texture,
   WebGLRenderer,
 } from 'three'
-import { AppSettings, Assets } from '../types'
-import { createGLTF } from './threeUtils'
+import { EffectComposer, EffectPass, FXAAEffect, RenderPass, VignetteEffect } from 'postprocessing'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
+import { AppSettings, Assets } from '../types'
+import { createModel } from './threeUtils'
 
 export default class ThreeApp {
   canvas: HTMLCanvasElement
@@ -27,12 +28,14 @@ export default class ThreeApp {
   scene: Scene
   camera: PerspectiveCamera
   cube: Mesh
-
-  private clock = new Clock()
-  private mixer?: AnimationMixer
-  private controls?: OrbitControls
   private inputElement: any
+  private composer: EffectComposer
+
   private raf = -1
+  private clock = new Clock()
+  private controls?: OrbitControls
+  private fbxMixer?: AnimationMixer
+  private gltfMixer?: AnimationMixer
 
   constructor(canvas: HTMLCanvasElement, inputElement: any, settings: AppSettings) {
     console.log(settings)
@@ -47,11 +50,8 @@ export default class ThreeApp {
 
     this.scene = new Scene()
 
-    this.cube = new Mesh(new BoxGeometry(), new MeshPhongMaterial())
+    this.cube = new Mesh(new BoxGeometry(), new MeshStandardMaterial({ roughness: 0.1, metalness: 0.75 }))
     this.scene.add(this.cube);
-
-    const sky = new Mesh(new SphereGeometry(20), new MeshNormalMaterial({ side: BackSide }))
-    this.scene.add(sky)
 
     const light = new DirectionalLight()
     light.position.set(3, 5, 5)
@@ -64,6 +64,11 @@ export default class ThreeApp {
 
     inputElement.addEventListener('resize', this.onResize)
     this.resize(settings.width, settings.height)
+
+    // Post
+    this.composer = new EffectComposer(this.renderer, { frameBufferType: HalfFloatType })
+    this.composer.addPass(new RenderPass(this.scene, this.camera))
+    this.composer.addPass(new EffectPass(this.camera, new FXAAEffect(), new VignetteEffect()))
 
     // @ts-ignore
     this.controls = new OrbitControls(this.camera, inputElement)
@@ -82,10 +87,21 @@ export default class ThreeApp {
   }
 
   onLoad(assets: Assets) {
-    // Show loaded Texture
-    const texture = new Texture(assets.textures.uvGrid)
-    texture.needsUpdate = true
+    // Cube Texture
+    const cubeTexture = new CubeTexture([
+      assets.images.px,
+      assets.images.nx,
+      assets.images.py,
+      assets.images.ny,
+      assets.images.pz,
+      assets.images.nz,
+    ], CubeReflectionMapping)
+    cubeTexture.needsUpdate = true
+    this.scene.background = cubeTexture
 
+    // Image
+    const texture = new Texture(assets.images.uvGrid)
+    texture.needsUpdate = true
     const material = new MeshBasicMaterial({ map: texture, side: DoubleSide })
     const mesh = new Mesh(new PlaneGeometry(), material)
     mesh.position.z = -5
@@ -93,13 +109,19 @@ export default class ThreeApp {
     mesh.scale.y *= -1
     this.scene.add(mesh)
 
-    // GLTF Examples
-    const gltf = createGLTF(assets.gltf.Horse)
-    const model = gltf.model
-    model.position.set(1.5, -1, 0)
-    model.scale.setScalar(0.01)
-    this.scene.add(model)
-    this.mixer = gltf.mixer
+    // FBX
+    const fbx = createModel(assets.models.Idle)
+    fbx.model.position.set(-1.5, -1, 0)
+    fbx.model.scale.setScalar(0.01)
+    this.scene.add(fbx.model)
+    this.fbxMixer = fbx.mixer
+
+    // GLTF
+    const gltf = createModel(assets.models.Horse)
+    gltf.model.position.set(1.5, -1, 0)
+    gltf.model.scale.setScalar(0.01)
+    this.scene.add(gltf.model)
+    this.gltfMixer = gltf.mixer
   }
 
   play() {
@@ -113,21 +135,16 @@ export default class ThreeApp {
 
   update() {
     const delta = this.clock.getDelta()
-    this.mixer?.update(delta)
+    this.fbxMixer?.update(delta)
+    this.gltfMixer?.update(delta)
 
     this.cube.rotation.x += delta
 
-    // const deltaX = delta * 100
-    // this.camera.position.z = damp(this.camera.position.z, this.targetZ, 0.1, deltaX)
-    // this.container.rotation.y = damp(this.container.rotation.y, this.targetRotation, 0.1, deltaX)
-
     this.controls?.update(delta)
-    // @ts-ignore
-    // console.log(this.controls.state, this.inputElement.clientHeight, this.camera.position)
   }
 
   draw() {
-    this.renderer.render(this.scene, this.camera)
+    this.composer.render()
   }
 
   onUpdate = () => {

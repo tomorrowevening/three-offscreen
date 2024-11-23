@@ -1,13 +1,17 @@
-import { Assets, File } from '../types'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { Group, Object3DEventMap } from 'three'
+import { FBXLoader } from 'three/examples/jsm/Addons.js'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { Assets, File, ModelLite } from '../types'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 let loadedAssets = 0
 let assetList: File[] = []
 
 const assets: Assets = {
-  gltf: {},
-  textures: {},
+  audio: {},
+  images: {},
+  models: {},
+  video: {},
 }
 
 const draco = new DRACOLoader();
@@ -17,45 +21,92 @@ draco.preload()
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(draco)
 
+const fbxLoader = new FBXLoader()
+
+// Load functions
+
+async function loadAudio(url: string) {
+  const response = await fetch(url);
+  return await response.arrayBuffer();
+}
+
 async function loadImage(url: string) {
   const response = await fetch(url);
   const blob = await response.blob();
   return await createImageBitmap(blob);
 }
 
-async function loadGLTF(item: File) {
+async function loadFBX(url: string): Promise<ModelLite> {
   return new Promise((resolve) => {
-    gltfLoader.load(
-      item.file,
-      (value: GLTF) => {
-        const gltfLite = {
-          scene: value.scene.toJSON(),
+    fbxLoader.loadAsync(url)
+      .then((value: Group<Object3DEventMap>) => {
+        resolve({
           animations: value.animations.map(animation => animation.toJSON(animation)),
-          cameras: value.cameras.map(camera => camera.toJSON()),
-        }
-        assets.gltf[item.name] = gltfLite
-        resolve(gltfLite)
-      },
-      undefined,
-      (err: unknown) => {
-        console.log('GLTF Error:')
-        console.log(err)
-      }
-    )
+          scene: value.toJSON(),
+        })
+      })
+      .catch((reason: any) => {
+        console.log('FBX Error:')
+        console.log(reason)
+      })
   })
 }
+
+async function loadGLTF(url: string): Promise<ModelLite> {
+  return new Promise((resolve) => {
+    gltfLoader.loadAsync(url)
+      .then((value: GLTF) => {
+        resolve({
+          animations: value.animations.map(animation => animation.toJSON(animation)),
+          cameras: value.cameras.map(camera => camera.toJSON()),
+          scene: value.scene.toJSON(),
+        })
+      })
+      .catch((reason: any) => {
+        console.log('GLTF Error:')
+        console.log(reason)
+      })
+  })
+}
+
+async function loadVideo(url: string) {
+  const response = await fetch(url);
+  return await response.blob();
+}
+
+//
 
 function loadStart() {
   assetList.forEach((item: File) => {
     switch (item.type) {
-      case 'texture':
-        loadImage(item.file).then((value: ImageBitmap) => {
-          assets.textures[item.name] = value
+      case 'audio':
+        loadAudio(item.file).then((value: ArrayBuffer) => {
+          assets.audio[item.name] = value
+          onLoad()
+        })
+        break
+      case 'fbx':
+        loadFBX(item.file).then((value: ModelLite) => {
+          assets.models[item.name] = value
           onLoad()
         })
         break
       case 'gltf':
-        loadGLTF(item).then(() => {
+        loadGLTF(item.file).then((value: ModelLite) => {
+          assets.models[item.name] = value
+          onLoad()
+        })
+        break
+      case 'image':
+        loadImage(item.file).then((value: ImageBitmap) => {
+          assets.images[item.name] = value
+          onLoad()
+        })
+        break
+        break
+      case 'video':
+        loadVideo(item.file).then((value: Blob) => {
+          assets.video[item.name] = value
           onLoad()
         })
         break
@@ -71,6 +122,8 @@ function onLoad() {
 function loadComplete() {
   self.postMessage({ type: 'loadComplete', data: assets })
 }
+
+// Worker
 
 self.onmessage = (event) => {
   switch (event.data.type) {
