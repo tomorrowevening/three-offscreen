@@ -10,30 +10,28 @@ let assetList: File[] = []
 const assets: Assets = {
   audio: {},
   images: {},
+  json: {},
   models: {},
   video: {},
 }
+
+// Loaders
 
 const draco = new DRACOLoader();
 draco.setDecoderPath('/libs/draco/');
 draco.preload()
 
+const fbxLoader = new FBXLoader()
+
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(draco)
 
-const fbxLoader = new FBXLoader()
 
 // Load functions
 
-async function loadAudio(url: string) {
+async function loadAudio(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   return await response.arrayBuffer();
-}
-
-async function loadImage(url: string) {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return await createImageBitmap(blob);
 }
 
 async function loadFBX(url: string): Promise<ModelLite> {
@@ -69,12 +67,23 @@ async function loadGLTF(url: string): Promise<ModelLite> {
   })
 }
 
-async function loadVideo(url: string) {
+async function loadImage(url: string): Promise<ImageBitmap> {
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return await createImageBitmap(blob);
+}
+
+async function loadJSON(url: string): Promise<any> {
+  const response = await fetch(url);
+  return response.json();
+}
+
+async function loadVideo(url: string): Promise<Blob> {
   const response = await fetch(url);
   return await response.blob();
 }
 
-//
+// Load calls
 
 function loadStart() {
   assetList.forEach((item: File) => {
@@ -103,6 +112,11 @@ function loadStart() {
           onLoad()
         })
         break
+      case 'json':
+        loadJSON(item.file).then((value: any) => {
+          assets.json[item.name] = value
+          onLoad()
+        })
         break
       case 'video':
         loadVideo(item.file).then((value: Blob) => {
