@@ -4,7 +4,7 @@ export type MethodProps = {
   canvas: HTMLCanvasElement
 }
 
-export type FileType = 'audio' | 'fbx' | 'gltf' | 'image' | 'json' | 'video'
+export type FileType = 'audio' | 'buffer' | 'fbx' | 'gltf' | 'image' | 'json' | 'video'
 
 export type File = {
   name: string
@@ -14,6 +14,7 @@ export type File = {
 
 export type Assets = {
   audio: any
+  buffer: any
   images: any
   json: any
   models: any

@@ -1,14 +1,15 @@
 import { Group, Object3DEventMap } from 'three'
 import { FBXLoader } from 'three/examples/jsm/Addons.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { Assets, File, ModelLite } from '../types'
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 let loadedAssets = 0
 let assetList: File[] = []
 
 const assets: Assets = {
   audio: {},
+  buffer: {},
   images: {},
   json: {},
   models: {},
@@ -26,10 +27,9 @@ const fbxLoader = new FBXLoader()
 const gltfLoader = new GLTFLoader()
 gltfLoader.setDRACOLoader(draco)
 
-
 // Load functions
 
-async function loadAudio(url: string): Promise<ArrayBuffer> {
+async function loadBuffer(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   return await response.arrayBuffer();
 }
@@ -89,8 +89,14 @@ function loadStart() {
   assetList.forEach((item: File) => {
     switch (item.type) {
       case 'audio':
-        loadAudio(item.file).then((value: ArrayBuffer) => {
+        loadBuffer(item.file).then((value: ArrayBuffer) => {
           assets.audio[item.name] = value
+          onLoad()
+        })
+        break
+      case 'buffer':
+        loadBuffer(item.file).then((value: ArrayBuffer) => {
+          assets.buffer[item.name] = value
           onLoad()
         })
         break
