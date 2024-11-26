@@ -1,31 +1,40 @@
-import { AnimationClip, AnimationMixer, Object3D, ObjectLoader } from 'three';
-import { ModelLite } from '../types'
+import { AnimationClip, AnimationMixer, Object3D, Object3DEventMap, ObjectLoader } from 'three';
+import { ModelInfo } from '../types'
 
-export function createModel(model: ModelLite) {
-  const loader = new ObjectLoader();
-  const scene = loader.parse(model.scene);
+type ParsedModel = {
+  model: Object3D<Object3DEventMap>
+  mixer: AnimationMixer
+  cameras: Object3D[]
+}
 
-  // Load animations
-  const mixer = new AnimationMixer(scene);
-  if (model.animations.length > 0) {
-    // @ts-ignore
-    const animations = model.animations.map(data => AnimationClip.parse(data));
-    // Play the first animation
-    const action = mixer.clipAction(animations[0]);
-    action.play();
-  }
+export function createModel(model: ModelInfo): Promise<ParsedModel> {
+  return new Promise((resolve) => {
+    const loader = new ObjectLoader();
+    loader.parseAsync(model.scene).then((scene: Object3D<Object3DEventMap>) => {
+      // Load animations
+      const mixer = new AnimationMixer(scene);
+      if (model.animations.length > 0) {
+        // @ts-ignore
+        const animations = model.animations.map(data => AnimationClip.parse(data));
+        // Play the first animation
+        const action = mixer.clipAction(animations[0]);
+        action.play();
+      }
 
-  const cameras: Object3D[] = []
-  if (model.cameras && model.cameras.length > 0) {
-    model.cameras.forEach((value: unknown) => {
-      const camera = loader.parse(value)
-      cameras.push(camera)
+      const cameras: Object3D[] = []
+      if (model.cameras && model.cameras.length > 0) {
+        model.cameras.forEach((value: unknown) => {
+          loader.parseAsync(value).then((camera) => {
+            cameras.push(camera)
+          })
+        })
+      }
+
+      resolve({
+        model: scene,
+        mixer,
+        cameras,
+      });
     })
-  }
-
-  return {
-    model: scene,
-    mixer,
-    cameras,
-  };
+  })
 }

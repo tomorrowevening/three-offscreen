@@ -30,7 +30,6 @@ export default class ThreeApp {
   cube: Mesh
   private inputElement: any
   private composer: EffectComposer
-
   private raf = -1
   private clock = new Clock()
   private controls?: OrbitControls
@@ -44,6 +43,8 @@ export default class ThreeApp {
 
     this.renderer = new WebGLRenderer({ canvas })
     this.renderer.setPixelRatio(settings.dpr)
+
+    // Scene
 
     this.camera = new PerspectiveCamera(60, settings.width / settings.height, 0.1, 100)
     this.camera.position.z = 12
@@ -60,15 +61,17 @@ export default class ThreeApp {
     const ambient = new AmbientLight(0xffffff, 0.1)
     this.scene.add(ambient)
 
-    this.clock.start()
-
-    inputElement.addEventListener('resize', this.onResize)
-    this.resize(settings.width, settings.height)
-
     // Post
     this.composer = new EffectComposer(this.renderer, { frameBufferType: HalfFloatType })
     this.composer.addPass(new RenderPass(this.scene, this.camera))
     this.composer.addPass(new EffectPass(this.camera, new FXAAEffect(), new VignetteEffect()))
+
+    // Begin App
+
+    this.clock.start()
+
+    inputElement.addEventListener('resize', this.onResize)
+    this.resize(settings.width, settings.height)
 
     // @ts-ignore
     this.controls = new OrbitControls(this.camera, inputElement)
@@ -86,21 +89,21 @@ export default class ThreeApp {
     this.renderer.dispose()
   }
 
-  onLoad(assets: Assets) {
+  async onLoad(assets: Assets) {
     // Cube Texture
     const cubeTexture = new CubeTexture([
-      assets.images.px,
-      assets.images.nx,
-      assets.images.py,
-      assets.images.ny,
-      assets.images.pz,
-      assets.images.nz,
+      assets.image.get('px'),
+      assets.image.get('nx'),
+      assets.image.get('py'),
+      assets.image.get('ny'),
+      assets.image.get('pz'),
+      assets.image.get('nz'),
     ], CubeReflectionMapping)
     cubeTexture.needsUpdate = true
     this.scene.background = cubeTexture
 
     // Image
-    const texture = new Texture(assets.images.uvGrid)
+    const texture = new Texture(assets.image.get('uvGrid'))
     texture.needsUpdate = true
     const material = new MeshBasicMaterial({ map: texture, side: DoubleSide })
     const mesh = new Mesh(new PlaneGeometry(), material)
@@ -110,14 +113,14 @@ export default class ThreeApp {
     this.scene.add(mesh)
 
     // FBX
-    const fbx = createModel(assets.models.Idle)
+    const fbx = await createModel(assets.model.get('Idle')!)
     fbx.model.position.set(-1.5, -1, 0)
     fbx.model.scale.setScalar(0.01)
     this.scene.add(fbx.model)
     this.fbxMixer = fbx.mixer
 
     // GLTF
-    const gltf = createModel(assets.models.Horse)
+    const gltf = await createModel(assets.model.get('Horse')!)
     gltf.model.position.set(1.5, -1, 0)
     gltf.model.scale.setScalar(0.01)
     this.scene.add(gltf.model)
@@ -137,9 +140,7 @@ export default class ThreeApp {
     const delta = this.clock.getDelta()
     this.fbxMixer?.update(delta)
     this.gltfMixer?.update(delta)
-
     this.cube.rotation.x += delta
-
     this.controls?.update(delta)
   }
 
@@ -166,7 +167,8 @@ export default class ThreeApp {
 
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
-    this.renderer.setSize(width, height, !(this.canvas instanceof OffscreenCanvas))
+    const updateStyle = !(this.canvas instanceof OffscreenCanvas)
+    this.composer.setSize(width, height, updateStyle)
   }
 
   // Handlers

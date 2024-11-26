@@ -2,18 +2,18 @@ import { Group, Object3DEventMap } from 'three'
 import { FBXLoader } from 'three/examples/jsm/Addons.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { Assets, File, ModelLite } from '../types'
+import { Assets, File, ModelInfo } from '../types'
 
 let loadedAssets = 0
-let assetList: File[] = []
 
 const assets: Assets = {
-  audio: {},
-  buffer: {},
-  images: {},
-  json: {},
-  models: {},
-  video: {},
+  audio: new Map<string, ArrayBuffer>(),
+  blob: new Map<string, Blob>(),
+  buffer: new Map<string, ArrayBuffer>(),
+  image: new Map<string, ImageBitmap>(),
+  json: new Map<string, any>(),
+  model: new Map<string, ModelInfo>(),
+  video: new Map<string, Blob>(),
 }
 
 // Loaders
@@ -34,7 +34,12 @@ async function loadBuffer(url: string): Promise<ArrayBuffer> {
   return await response.arrayBuffer();
 }
 
-async function loadFBX(url: string): Promise<ModelLite> {
+async function loadBlob(url: string): Promise<Blob> {
+  const response = await fetch(url);
+  return await response.blob();
+}
+
+async function loadFBX(url: string): Promise<ModelInfo> {
   return new Promise((resolve) => {
     fbxLoader.loadAsync(url)
       .then((value: Group<Object3DEventMap>) => {
@@ -50,7 +55,7 @@ async function loadFBX(url: string): Promise<ModelLite> {
   })
 }
 
-async function loadGLTF(url: string): Promise<ModelLite> {
+async function loadGLTF(url: string): Promise<ModelInfo> {
   return new Promise((resolve) => {
     gltfLoader.loadAsync(url)
       .then((value: GLTF) => {
@@ -78,63 +83,64 @@ async function loadJSON(url: string): Promise<any> {
   return response.json();
 }
 
-async function loadVideo(url: string): Promise<Blob> {
-  const response = await fetch(url);
-  return await response.blob();
-}
-
 // Load calls
 
-function loadStart() {
+function loadStart(assetList: File[]) {
   assetList.forEach((item: File) => {
     switch (item.type) {
       case 'audio':
         loadBuffer(item.file).then((value: ArrayBuffer) => {
-          assets.audio[item.name] = value
-          onLoad()
+          assets.audio.set(item.name, value)
+          onLoad(assetList)
+        })
+        break
+      case 'blob':
+        loadBlob(item.file).then((value: Blob) => {
+          assets.blob.set(item.name, value)
+          onLoad(assetList)
         })
         break
       case 'buffer':
         loadBuffer(item.file).then((value: ArrayBuffer) => {
-          assets.buffer[item.name] = value
-          onLoad()
+          assets.buffer.set(item.name, value)
+          onLoad(assetList)
         })
         break
       case 'fbx':
-        loadFBX(item.file).then((value: ModelLite) => {
-          assets.models[item.name] = value
-          onLoad()
+        loadFBX(item.file).then((value: ModelInfo) => {
+          assets.model.set(item.name, value)
+          onLoad(assetList)
         })
         break
       case 'gltf':
-        loadGLTF(item.file).then((value: ModelLite) => {
-          assets.models[item.name] = value
-          onLoad()
+        loadGLTF(item.file).then((value: ModelInfo) => {
+          assets.model.set(item.name, value)
+          onLoad(assetList)
         })
         break
       case 'image':
         loadImage(item.file).then((value: ImageBitmap) => {
-          assets.images[item.name] = value
-          onLoad()
+          assets.image.set(item.name, value)
+          onLoad(assetList)
         })
         break
       case 'json':
         loadJSON(item.file).then((value: any) => {
-          assets.json[item.name] = value
-          onLoad()
+          assets.json.set(item.name, value)
+          onLoad(assetList)
         })
         break
       case 'video':
-        loadVideo(item.file).then((value: Blob) => {
-          assets.video[item.name] = value
-          onLoad()
+        loadBlob(item.file).then((value: Blob) => {
+          assets.video.set(item.name, value)
+          onLoad(assetList)
         })
         break
     }
   })
 }
 
-function onLoad() {
+function onLoad(assetList: File[]) {
   loadedAssets++
   if (loadedAssets >= assetList.length) loadComplete()
 }
@@ -148,8 +154,7 @@ function loadComplete() {
 self.onmessage = (event) => {
   switch (event.data.type) {
     case 'loadStart':
-      assetList = event.data.data
-      loadStart()
+      loadStart(event.data.data)
       break;
   }
 }

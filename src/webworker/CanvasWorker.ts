@@ -12,9 +12,6 @@ function createApp(data: any) {
   }
 
   const proxy = proxyManager.getProxy(data.canvasId);
-  proxy.ownerDocument = proxy;
-  (self as any).document = {};
-
   app = new ThreeApp(canvas, proxy, data)
   app.play()
 }

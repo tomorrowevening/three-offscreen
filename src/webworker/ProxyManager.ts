@@ -25,6 +25,11 @@ export class ElementProxyReceiver extends EventDispatcher {
   height: number = 0;
   ownerDocument: any = undefined;
 
+  constructor() {
+    super()
+    this.ownerDocument = this
+  }
+
   get clientWidth(): number {
     return this.width;
   }
