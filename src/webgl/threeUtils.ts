@@ -1,4 +1,14 @@
-import { AnimationClip, AnimationMixer, Object3D, Object3DEventMap, ObjectLoader } from 'three';
+import {
+  AnimationClip,
+  AnimationMixer,
+  Audio,
+  Material,
+  Mesh,
+  Object3D,
+  Object3DEventMap,
+  ObjectLoader,
+  Texture,
+} from 'three';
 import { ModelInfo } from '../types'
 
 type ParsedModel = {
@@ -38,3 +48,46 @@ export function createModel(model: ModelInfo): Promise<ParsedModel> {
     })
   })
 }
+
+export const disposeTexture = (texture?: Texture): void => {
+  texture?.dispose();
+};
+
+export const disposeMaterial = (material?: Material | Material[]): void => {
+  if (!material) return;
+
+  if (Array.isArray(material)) {
+    material.forEach((mat: Material) => mat.dispose());
+  } else {
+    material.dispose();
+  }
+};
+
+export const dispose = (object: Object3D): void => {
+  if (!object) return;
+
+  // Dispose children
+  while (object.children.length > 0) {
+    const child = object.children[0];
+    if (child.type === 'Audio') {
+      (child as Audio).pause();
+      if (child.parent) {
+        child.parent.remove(child);
+      }
+    } else {
+      dispose(child);
+    }
+  }
+
+  // Dispose object
+  if (object.parent) object.parent.remove(object);
+  // @ts-ignore
+  if (object.isMesh) {
+    const mesh = object as Mesh;
+    mesh.geometry?.dispose();
+    disposeMaterial(mesh.material);
+  }
+
+  // @ts-ignore
+  if (object.dispose !== undefined) object.dispose();
+};

@@ -15,10 +15,10 @@ export default function Wrapper() {
       // Detect Support
       let supportOffScreenWebGL = false
       if (canvasRef.current !== null) {
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
         supportOffScreenWebGL = 'transferControlToOffscreen' in canvasRef.current
 
         // If it's Safari, then check the version because Safari < 17 doesn't support OffscreenCanvas with a WebGL context.
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
         if (isSafari) {
           const versionMatch = navigator.userAgent.match( /version\/(\d+)/i )
           const safariVersion = versionMatch ? parseInt( versionMatch[ 1 ] ) : 0
@@ -31,8 +31,8 @@ export default function Wrapper() {
 
       // Update Settings
       Settings.dpr = devicePixelRatio
-      if (gpuTier.fps) Settings.fps = Math.min(gpuTier.fps, 60) // cap FPS to 60
-      if (gpuTier.isMobile) Settings.mobile = gpuTier.isMobile
+      if (gpuTier.fps !== undefined) Settings.fps = Math.min(gpuTier.fps, 60) // cap FPS to 60
+      if (gpuTier.isMobile !== undefined) Settings.mobile = gpuTier.isMobile
       if (gpuTier.tier === 3) Settings.quality = QualityType.High
       else if (gpuTier.tier === 2) Settings.quality = QualityType.Medium
       Settings.supportOffScreenCanvas = supportOffScreenWebGL
