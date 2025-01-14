@@ -7,14 +7,17 @@ export default class ThreeApp {
   canvas: HTMLCanvasElement
   renderer: WebGLRenderer
   scene: ThreeScene
+  settings: AppSettings
+
   private inputElement: any
   private raf = -1
   private clock = new Clock()
 
   constructor(canvas: HTMLCanvasElement, inputElement: any, settings: AppSettings) {
-    console.log(settings)
+    console.log('Settings:', settings)
     this.canvas = canvas
     this.inputElement = inputElement
+    this.settings = settings
 
     this.renderer = new WebGLRenderer({ canvas })
     this.renderer.setPixelRatio(settings.dpr)
@@ -67,18 +70,14 @@ export default class ThreeApp {
   }
 
   resize(width: number, height: number) {
-    if (this.canvas instanceof OffscreenCanvas) {
-      const offscreen = this.canvas as OffscreenCanvas
+    this.scene.resize(width, height, !this.settings.supportOffScreenCanvas);
+
+    if (this.settings.supportOffScreenCanvas) {
       this.inputElement.clientWidth = width
       this.inputElement.clientHeight = height
-      // @ts-ignore
-      offscreen.clientWidth = width
-      // @ts-ignore
-      offscreen.clientHeight = height
+      this.inputElement.width = width
+      this.inputElement.height = height
     }
-
-    const updateStyle = !(this.canvas instanceof OffscreenCanvas)
-    this.scene.resize(width, height, updateStyle);
   }
 
   // Handlers
